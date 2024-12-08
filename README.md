@@ -1,4 +1,4 @@
-# portfolio-manager-helper
+# portfolio-manager
 Create virtual environment:
 
 ```

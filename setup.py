@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="your_package_name",
+    name="portfolio_management_helper",
     version="0.1.0",
-    description="A brief description of your package",
-    author="Your Name",
-    author_email="your.email@example.com",
+    description="Portfolio Management Helper",
+    author="Fernando Rocha Urbano",
+    author_email="fernando.rocha.urbano@gmail.com",
     packages=find_packages(),
     install_requires=[
         "pandas==2.2.3",

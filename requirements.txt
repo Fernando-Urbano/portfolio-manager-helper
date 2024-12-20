@@ -1,7 +1,6 @@
 pandas==2.2.3
 numpy==2.1.1
 matplotlib==3.9.2
-matplotlib==3.9.2
 scipy==1.14.1
 yfinance==0.2.43
 datetime==3.0.3

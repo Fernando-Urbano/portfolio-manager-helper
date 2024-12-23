@@ -5,13 +5,11 @@ import math
 import datetime
 pd.options.display.float_format = "{:,.4f}".format
 from typing import Union, List
-from pandas import Timestamp
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 import statsmodels.api as sm
-from sklearn.linear_model import LinearRegression
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -316,7 +314,7 @@ def calc_summary_statistics(
             returns_corr = returns_corr[[c + ' Correlation' for c  in correlations]]
         summary_statistics = summary_statistics.join(returns_corr)
     
-    return filter_columns_and_indexes(
+    return _filter_columns_and_indexes(
         summary_statistics,
         keep_columns=keep_columns,
         drop_columns=drop_columns,
@@ -385,7 +383,7 @@ def calc_negative_pct(
     if calc_positive:
         negative_statistics = negative_statistics.rename(lambda i: i.replace('Negative', 'Positive'), axis=0)
 
-    return filter_columns_and_indexes(
+    return _filter_columns_and_indexes(
         negative_statistics,
         keep_columns=keep_columns,
         drop_columns=drop_columns,
@@ -395,7 +393,7 @@ def calc_negative_pct(
     )
 
 
-def filter_columns_and_indexes(
+def _filter_columns_and_indexes(
     df: pd.DataFrame,
     keep_columns: Union[list, str],
     drop_columns: Union[list, str],
@@ -590,7 +588,7 @@ def calc_cross_section_regression(
         premiums_comparison.index.name = None
         premiums_comparison.join(calc_tangency_weights(factors))
         premiums_comparison = premiums_comparison.join(factors.corr().rename(columns=lambda c: c + ' Correlation'))
-        return filter_columns_and_indexes(
+        return _filter_columns_and_indexes(
             premiums_comparison,
             keep_columns=keep_columns,
             drop_columns=drop_columns,
@@ -610,7 +608,7 @@ def calc_cross_section_regression(
         cross_section_regression['CS MAE'] = cross_section_regression_model.resid.abs().mean()
         cross_section_regression['CS Annualized MAE'] = cross_section_regression['CS MAE'] * annual_factor
 
-    return filter_columns_and_indexes(
+    return _filter_columns_and_indexes(
         cross_section_regression,
         keep_columns=keep_columns,
         drop_columns=drop_columns,
@@ -618,7 +616,6 @@ def calc_cross_section_regression(
         drop_indexes=drop_indexes,
         drop_before_keep=drop_before_keep
     )
-
 
 
 def get_best_and_worst(
@@ -720,7 +717,7 @@ def calc_correlations(
     if return_heatmap:
         return heatmap
     else:
-        return filter_columns_and_indexes(
+        return _filter_columns_and_indexes(
             correlation_matrix,
             keep_columns=keep_columns,
             drop_columns=drop_columns,
@@ -1200,7 +1197,7 @@ def calc_regression(
         except Exception as e:
             print(f'Cannot calculate Sortino Ratio: {str(e)}. Set "calc_sortino_ratio" to False or review function')
     y_name = f"{y_name} no Intercept" if not intercept else y_name
-    return filter_columns_and_indexes(
+    return _filter_columns_and_indexes(
         pd.DataFrame(summary, index=[y_name]),
         keep_columns=keep_columns,
         drop_columns=drop_columns,
@@ -1326,7 +1323,7 @@ def calc_iterative_regression(
         warnings = False
         regressions = pd.concat([regressions, new_regression], axis=0)
     
-    return filter_columns_and_indexes(
+    return _filter_columns_and_indexes(
         regressions,
         keep_columns=keep_columns,
         drop_columns=drop_columns,
@@ -1444,7 +1441,7 @@ def calc_replication_oos(
 
     print("OOS R^Squared: {:.4%}".format(oos_rsquared))
 
-    return filter_columns_and_indexes(
+    return _filter_columns_and_indexes(
         summary_pred,
         keep_columns=keep_columns,
         drop_columns=drop_columns,
@@ -1580,7 +1577,7 @@ def calc_replication_oos_not_lagged_features(
         c.replace(' Replicated', f' Replicated {oos_print}').replace(' Actual', f' Actual {oos_print}')
     ))
 
-    return filter_columns_and_indexes(
+    return _filter_columns_and_indexes(
         summary,
         keep_columns=keep_columns,
         drop_columns=drop_columns,
@@ -1756,7 +1753,7 @@ def calc_var_cvar_summary(
         hit_ratio['Hit Ratio Error'] = (hit_ratio['Hit Ratio'] - quantile) / quantile
         hit_ratio['Hit Ratio Absolute Error'] = abs(hit_ratio['Hit Ratio Error'])
         hit_ratio = hit_ratio.sort_values('Hit Ratio Absolute Error')
-        return filter_columns_and_indexes(
+        return _filter_columns_and_indexes(
             hit_ratio,
             keep_columns=keep_columns,
             drop_columns=drop_columns,
@@ -1785,7 +1782,7 @@ def calc_var_cvar_summary(
     return_stats = [return_stats.lower()] if isinstance(return_stats, str) else [s.lower() for s in return_stats]
     return_stats = list(map(lambda x: 'volatility' if x == 'vol' else x, return_stats))
     if return_stats == ['all'] or set(return_stats) == set(['returns', 'var', 'cvar', 'volatility']):
-        return filter_columns_and_indexes(
+        return _filter_columns_and_indexes(
             summary,
             keep_columns=keep_columns,
             drop_columns=drop_columns,
@@ -1793,7 +1790,7 @@ def calc_var_cvar_summary(
             drop_indexes=drop_indexes,
             drop_before_keep=drop_before_keep
         )
-    return filter_columns_and_indexes(
+    return _filter_columns_and_indexes(
         summary.loc[:, lambda df: df.columns.map(lambda c: bool(re.search(r"\b" + r"\b|\b".join(return_stats) + r"\b", c.lower())))],
         keep_columns=keep_columns,
         drop_columns=drop_columns,
@@ -1859,7 +1856,7 @@ def calc_rolling_oos_port(
         )
         port_returns_oos = pd.concat([port_returns_oos, idx_port_return_oos])
 
-    return filter_columns_and_indexes(
+    return _filter_columns_and_indexes(
         port_returns_oos,
         keep_columns=keep_columns,
         drop_columns=drop_columns,
@@ -1944,14 +1941,14 @@ def calc_fx_exc_ret(
         all_fx_holdings_exc_ret = all_fx_holdings_exc_ret.join(fx_holdings_exc_ret, how='outer')
 
     if not return_exc_ret:
-        return filter_columns_and_indexes(
+        return _filter_columns_and_indexes(
             calc_summary_statistics(all_fx_holdings_exc_ret, annual_factor=annual_factor),
             keep_columns=keep_columns, drop_columns=drop_columns,
             keep_indexes=keep_indexes, drop_indexes=drop_indexes,
             drop_before_keep=drop_before_keep
         )
     else:
-        return filter_columns_and_indexes(
+        return _filter_columns_and_indexes(
             all_fx_holdings_exc_ret,
             keep_columns=keep_columns, drop_columns=drop_columns,
             keep_indexes=keep_indexes, drop_indexes=drop_indexes,
@@ -2079,7 +2076,7 @@ def calc_fx_regression(
         except:
             print('Could not print analysis. Review function.')
 
-    return filter_columns_and_indexes(
+    return _filter_columns_and_indexes(
         all_regressions_summary,
         keep_columns=keep_columns, drop_columns=drop_columns,
         keep_indexes=keep_indexes, drop_indexes=drop_indexes,
@@ -2172,7 +2169,7 @@ def calc_dynamic_carry_trade(
         all_expected_fx_premium = all_expected_fx_premium.join(expected_fx_premium, how='outer')
 
     if return_premium_series:
-        return filter_columns_and_indexes(
+        return _filter_columns_and_indexes(
             all_expected_fx_premium,
             keep_columns=keep_columns, drop_columns=drop_columns,
             keep_indexes=keep_indexes, drop_indexes=drop_indexes,
@@ -2198,7 +2195,7 @@ def calc_dynamic_carry_trade(
     summary_statistics['Annualized Mean'] = summary_statistics['Mean'] * annual_factor
     summary_statistics['Annualized Vol'] = summary_statistics['Vol'] * math.sqrt(annual_factor)
     
-    return filter_columns_and_indexes(
+    return _filter_columns_and_indexes(
         summary_statistics,
         keep_columns=keep_columns, drop_columns=drop_columns,
         keep_indexes=keep_indexes, drop_indexes=drop_indexes,

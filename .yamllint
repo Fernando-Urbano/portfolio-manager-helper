@@ -1,0 +1,6 @@
+extends: relaxed
+
+rules:
+  line-length:
+    max: 120  # Set a reasonable max length
+    level: warning  # Change to warning instead of error

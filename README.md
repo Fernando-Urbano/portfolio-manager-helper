@@ -19,7 +19,10 @@ conda activate finm
 
 Install packages:
 ```
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
-
+Install pre-commit hooks:
+```
+pre-commit install
+```

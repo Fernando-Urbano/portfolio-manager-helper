@@ -15,11 +15,15 @@ from scipy.stats import norm
 pd.options.display.float_format = "{:,.4f}".format
 warnings.filterwarnings("ignore")
 
+
 def read_excel_default(
-        excel_name: str, index_col : int = 0,
-        parse_dates: bool =True, print_sheets: bool = False,
-        sheet_name: str = None, **kwargs
-    ):
+    excel_name: str,
+    index_col: int = 0,
+    parse_dates: bool = True,
+    print_sheets: bool = False,
+    sheet_name: str = None,
+    **kwargs,
+):
     """
     Reads an Excel file and returns a DataFrame with specified options.
 
@@ -43,22 +47,27 @@ def read_excel_default(
         while True:
             try:
                 sheet = pd.read_excel(excel_name, sheet_name=n)
-                print(f'Sheet {n}:')
+                print(f"Sheet {n}:")
                 print(", ".join(list(sheet.columns)))
                 print(sheet.head(3))
                 n += 1
-                print('\n' * 2)
+                print("\n" * 2)
             except:
                 return
     sheet_name = 0 if sheet_name is None else sheet_name
-    returns = pd.read_excel(excel_name, index_col=index_col, parse_dates=parse_dates,  sheet_name=sheet_name, **kwargs)
+    returns = pd.read_excel(
+        excel_name,
+        index_col=index_col,
+        parse_dates=parse_dates,
+        sheet_name=sheet_name,
+        **kwargs,
+    )
     if returns.index.name is not None:
-        if returns.index.name.lower() in ['date', 'dates']:
-            returns.index.name = 'date'
+        if returns.index.name.lower() in ["date", "dates"]:
+            returns.index.name = "date"
     elif isinstance(returns.index[0], (datetime.date, datetime.datetime)):
-        returns.index.name = 'date'
+        returns.index.name = "date"
     return returns
-
 
 
 def _filter_columns_and_indexes(
@@ -67,7 +76,7 @@ def _filter_columns_and_indexes(
     drop_columns: Union[list, str],
     keep_indexes: Union[list, str],
     drop_indexes: Union[list, str],
-    drop_before_keep: bool = False
+    drop_before_keep: bool = False,
 ):
     """
     Filters a DataFrame based on specified columns and indexes.
@@ -88,11 +97,19 @@ def _filter_columns_and_indexes(
     df = df.copy()
     # Columns
     if keep_columns is not None:
-        keep_columns = "(?i)" + "|".join(keep_columns) if isinstance(keep_columns, list) else "(?i)" + keep_columns
+        keep_columns = (
+            "(?i)" + "|".join(keep_columns)
+            if isinstance(keep_columns, list)
+            else "(?i)" + keep_columns
+        )
     else:
         keep_columns = None
     if drop_columns is not None:
-        drop_columns = "(?i)" + "|".join(drop_columns) if isinstance(drop_columns, list) else "(?i)" + drop_columns
+        drop_columns = (
+            "(?i)" + "|".join(drop_columns)
+            if isinstance(drop_columns, list)
+            else "(?i)" + drop_columns
+        )
     else:
         drop_columns = None
     if not drop_before_keep:
@@ -105,11 +122,19 @@ def _filter_columns_and_indexes(
             df = df.filter(regex=keep_columns)
     # Indexes
     if keep_indexes is not None:
-        keep_indexes = "(?i)" + "|".join(keep_indexes) if isinstance(keep_indexes, list) else "(?i)" + keep_indexes
+        keep_indexes = (
+            "(?i)" + "|".join(keep_indexes)
+            if isinstance(keep_indexes, list)
+            else "(?i)" + keep_indexes
+        )
     else:
         keep_indexes = None
     if drop_indexes is not None:
-        drop_indexes = "(?i)" + "|".join(drop_indexes) if isinstance(drop_indexes, list) else "(?i)" + drop_indexes
+        drop_indexes = (
+            "(?i)" + "|".join(drop_indexes)
+            if isinstance(drop_indexes, list)
+            else "(?i)" + drop_indexes
+        )
     else:
         drop_indexes = None
     if not drop_before_keep:
@@ -121,5 +146,3 @@ def _filter_columns_and_indexes(
         if keep_indexes is not None:
             df = df.filter(regex=keep_indexes, axis=0)
     return df
-
-

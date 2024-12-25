@@ -28,6 +28,11 @@
 │   ├── requires.txt
 │   └── top_level.txt
 ├── requirements.txt
+├── scripts
+│   ├── all.txt
+│   ├── portfolio_management.txt
+│   ├── tests.txt
+│   └── tree_output.txt
 ├── setup.py
 ├── tests
 │   ├── __init__.py
@@ -38,7 +43,8 @@
 │   ├── test_risk.py
 │   ├── test_statistics.py
 │   └── test_utils.py
-└── trash
-    └── all_functions.py
+├── trash
+│   └── all_functions.py
+└── tree_output.txt
 
-11 directories, 31 files
+12 directories, 36 files

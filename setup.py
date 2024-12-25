@@ -1,8 +1,17 @@
 from setuptools import setup, find_packages
+import re
+
+from pathlib import Path
+
+version = Path("version/new_version.txt").read_text().strip()
+if re.search("\d+\.\d+\.\d+", version):
+    VERSION = version
+else:
+    raise ValueError("Version not found in version/new_version.txt")
 
 setup(
-    name="portfolio_management_helper",
-    version="0.1.0",
+    name="portfolio_management",
+    version=VERSION,
     description="Portfolio Management Helper",
     author="Fernando Rocha Urbano",
     author_email="fernando.rocha.urbano@gmail.com",

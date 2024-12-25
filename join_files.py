@@ -8,15 +8,13 @@ import subprocess
 def save_tree_output_to_file(output_file):
     try:
         result = subprocess.run(['tree'], capture_output=True, text=True)
-        
+
         with open(output_file, 'w') as file:
             file.write(result.stdout)
-        
+
     except Exception as e:
         pass
 
-# Example usage
-save_tree_output_to_file('tree_output.txt')
 
 def get_script_files(directory=None, extension="puml"):
     if directory is None:

@@ -71,7 +71,7 @@ if __name__ == "__main__":
     save_tree_output_to_file("scripts/tree_output.txt")
     scripts_to_file(
         "portfolio_management", "py", "Package files:", "scripts/portfolio_management",
-        ignore_files=["__init__.py"]
+        ignore_files=["__init__.py", "fx.py", "utils.py", "backtest.py"]
     )
     scripts_to_file(
         "tests", "py", "Test files:", "scripts/tests",

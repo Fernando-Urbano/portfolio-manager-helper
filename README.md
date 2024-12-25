@@ -1,7 +1,7 @@
 # Portfolio Manager Package
 
 ## Create Virtual Environment
-The virtual environment is created using conda. It is used to manage the dependencies of the package.
+The virtual environment is created using conda.aaa It is used to manage the dependencies of the package.
 
 The following steps are used to create the virtual environment.
 

@@ -135,6 +135,136 @@ def check_if_uip_holds(
     pass
 
 
+
+def calc_fx_regression(
+    fx_rates: pd.DataFrame,
+    rf_rates: pd.DataFrame,
+    transform_to_log_fx_rates: bool = True,
+    transform_to_log_rf_rates: bool = True,
+    rf_to_fx: dict = None,
+    base_rf: str = None,
+    base_rf_series: Union[pd.Series, pd.DataFrame] = None,
+    annual_factor: Union[int, None] = None,
+    keep_columns: Union[list, str] = None,
+    drop_columns: Union[list, str] = None,
+    keep_indexes: Union[list, str] = None,
+    drop_indexes: Union[list, str] = None,
+    drop_before_keep: bool = False,
+    print_analysis: bool = True
+):
+    """
+    Calculates FX regression and provides an analysis of how the risk-free rate differentials affect FX rates.
+
+    Parameters:
+    fx_rates (pd.DataFrame): Time series of FX rates.
+    rf_rates (pd.DataFrame): Time series of risk-free rates.
+    transform_to_log_fx_rates (bool, default=True): If True, converts FX rates to log returns.
+    transform_to_log_rf_rates (bool, default=True): If True, converts risk-free rates to log returns.
+    rf_to_fx (dict, default=None): Mapping of risk-free rates to FX pairs.
+    base_rf (str, default=None): Base risk-free rate to use for calculations.
+    base_rf_series (pd.Series or pd.DataFrame, default=None): Time series of the base risk-free rate.
+    annual_factor (int or None, default=None): Factor for annualizing returns.
+    keep_columns (list or str, default=None): Columns to keep in the resulting DataFrame.
+    drop_columns (list or str, default=None): Columns to drop from the resulting DataFrame.
+    keep_indexes (list or str, default=None): Indexes to keep in the resulting DataFrame.
+    drop_indexes (list or str, default=None): Indexes to drop from the resulting DataFrame.
+    drop_before_keep (bool, default=False): If True, drops specified columns/indexes before keeping.
+    print_analysis (bool, default=True): If True, prints an analysis of the regression results.
+
+    Returns:
+    pd.DataFrame: Summary of regression statistics for the FX rates and risk-free rate differentials.
+    """
+    raise Exception("Function not available - needs testing prior to use")
+    fx_rates = fx_rates.copy()
+    rf_rates = rf_rates.copy()
+    if isinstance(base_rf_series, (pd.Series, pd.DataFrame)):
+        base_rf_series = base_rf_series.copy()
+
+    if rf_to_fx is None:
+        rf_to_fx = {
+            'GBP1M': 'USUK',
+            'EUR1M': 'USEU',
+            'CHF1M': 'USSZ',
+            'JPY1M': 'USJP'
+        }
+
+    if transform_to_log_fx_rates:
+        fx_rates = fx_rates.applymap(lambda x: math.log(x))
+
+    if transform_to_log_rf_rates:
+        rf_rates = rf_rates.applymap(lambda x: math.log(x + 1))
+
+    if base_rf is None and base_rf_series is None:
+        print("No 'base_rf' or 'base_rf_series' was provided. Trying to use 'USD1M' as the base risk-free rate.")
+        base_rf = 'USD1M'
+    if base_rf_series is None:
+        base_rf_series = rf_rates[base_rf]
+
+    if annual_factor is None:
+        print("Regression assumes 'annual_factor' equals to 12 since it was not provided")
+        annual_factor = 12
+
+    all_regressions_summary = pd.DataFrame({})
+
+    for rf, fx in rf_to_fx.items():
+        try:
+            rf_name = re.sub('[0-9]+M', '', rf)
+        except:
+            rf_name = rf
+        factor = (base_rf_series - rf_rates[rf]).to_frame('Base RF - Foreign RF')
+        strat = fx_rates[fx].diff().to_frame(rf_name)
+        regression_summary = calc_regression(strat, factor, annual_factor=annual_factor, warnings=False)
+        all_regressions_summary = pd.concat([all_regressions_summary, regression_summary])
+
+    if print_analysis:
+        try:
+            print('\n' * 2)
+            for currency in all_regressions_summary.index:
+                fx_beta = all_regressions_summary.loc[currency, 'Base RF - Foreign RF Beta']
+                fx_alpha = all_regressions_summary.loc[currency, 'Alpha']
+                print(f'For {currency} against the base currency, the Beta is {fx_beta:.2f}.')
+                if 1.1 >= fx_beta and fx_beta >= 0.85:
+                    print(
+                        'which shows that, on average, the difference in risk-free rate is mainly offset by the FX rate movement.'
+                    )
+                elif fx_beta > 1.1:
+                    print(
+                        'which shows that, on average, the difference in risk-free rate is more than offset by the FX rate movement.,\n'
+                        'Therefore, on average, the currency with the lower risk-free rate outperforms.'
+                    )
+                elif fx_beta < 0.85 and fx_beta > 0.15:
+                    print(
+                        'which shows that, on average, the difference in risk-free rate is only partially offset by the FX rate movement.\n'
+                        'Therefore, on average, the currency with the higher risk-free rate outperforms.'
+                    )
+                elif fx_beta <= 0.15 and fx_beta >= -0.1:
+                    print(
+                        'which shows that, on average, the difference in risk-free rate is almost not offset by the FX rate movement.\n'
+                        'Therefore, on average, the currency with the higher risk-free rate outperforms.'
+                    )
+                elif fx_beta <= 0.15 and fx_beta >= -0.1:
+                    print(
+                        'which shows that, on average, the difference in risk-free rate is almost not offset by the FX rate movement.\n'
+                        'Therefore, on average, the currency with the higher risk-free rate outperforms.'
+                    )
+                else:
+                    print(
+                        'which shows that, on average, the change FX rate helps the currency with the highest risk-free return.\n'
+                        'Therefore, the difference between returns is increased, on average, by the changes in the FX rate.'
+                    )
+                print('\n' * 2)
+        except:
+            print('Could not print analysis. Review function.')
+
+    return _filter_columns_and_indexes(
+        all_regressions_summary,
+        keep_columns=keep_columns, drop_columns=drop_columns,
+        keep_indexes=keep_indexes, drop_indexes=drop_indexes,
+        drop_before_keep=drop_before_keep
+    )
+
+
+
 def calc_dynamic_carry_trade(
     fx_rates: pd.DataFrame,
     rf_rates: pd.DataFrame,

@@ -1,0 +1,27 @@
+name: Pre-Merge Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  premerge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+        # Pre-commit uses Python, so we set up Python in the environment.
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+        # Install the pre-commit package so we can run the hooks.
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files

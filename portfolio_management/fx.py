@@ -136,6 +136,7 @@ def check_if_uip_holds(
 
 
 
+
 def calc_fx_regression(
     fx_rates: pd.DataFrame,
     rf_rates: pd.DataFrame,

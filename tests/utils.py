@@ -18,8 +18,8 @@ def create_returns_df(
     ) -> pd.DataFrame:
     if variance_multiplier > 0.5 or variance_multiplier <= 0:
         raise ValueError("variance_multiplier must be between 0 and 0.5")
-    np.random.seed(seed)
-    asset_names = ["".join(np.random.choice(list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 3)) for i in range(n_assets)]
+    rng = np.random.RandomState(seed)
+    asset_names = ["".join(rng.choice(list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 3)) for i in range(n_assets)]
     cov_matrix = make_sparse_spd_matrix(n_dim=n_assets, alpha=alpha_sparsity)
     cov_matrix /= (np.max(cov_matrix) / variance_multiplier)
     returns = np.random.multivariate_normal(np.ones(n_assets) * avg_return, cov_matrix, n_samples)
@@ -39,8 +39,8 @@ def create_rf_returns_df(
     end_date: str = "2024-01-01",
     date_frequecy: Union[Literal["ME", "BM", "BQ", "BA", "W", "D"]] = "ME"
 ) -> pd.DataFrame:
-    np.random.seed(seed)
-    rf_returns = np.random.normal(avg_rf_rate, std_rf_rate, n_samples)
+    rng = np.random.RandomState(seed)
+    rf_returns = rng.normal(avg_rf_rate, std_rf_rate, n_samples)
     rf_returns = pd.Series(rf_returns)
     for i in range(1, n_samples):
         rf_returns[i] = rf_returns[i] * (1 - ts_auto_correlation) + rf_returns[i - 1] * ts_auto_correlation

@@ -18,7 +18,7 @@ def get_version_from_pypi(package_name):
     response.raise_for_status()
     data = response.json()
     return data['info']['version']
-    
+
 def update_current_version_file(package_name, file_path):
     """Check the current version on PyPI and overwrite current_version.txt."""
     try:

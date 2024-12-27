@@ -12,7 +12,7 @@ from arch import arch_model
 from collections import defaultdict
 from portfolio_management.utils import _filter_columns_and_indexes
 from scipy.stats import norm
-from port_construction import calc_tangency_weights
+from portfolio_management.port_construction import calc_tangency_weights
 
 pd.options.display.float_format = "{:,.4f}".format
 warnings.filterwarnings("ignore")
@@ -89,8 +89,7 @@ def calc_negative_pct(
     )
 
 
-
-def calc_cummulative_returns(
+def calc_cumulative_returns(
     returns: Union[pd.DataFrame, pd.Series],
     return_plot: bool = True,
     fig_size: tuple = (7, 5),
@@ -115,22 +114,22 @@ def calc_cummulative_returns(
     if timeframes is not None:
         for name, timeframe in timeframes.items():
             if timeframe[0] and timeframe[1]:
-                timeframe_returns = returns.loc[timeframe[0]:timeframe[1]]
+                timeframe_returns = returns.loc[timeframe[0] : timeframe[1]]
             elif timeframe[0]:
-                timeframe_returns = returns.loc[timeframe[0]:]
+                timeframe_returns = returns.loc[timeframe[0] :]
             elif timeframe[1]:
-                timeframe_returns = returns.loc[:timeframe[1]]
+                timeframe_returns = returns.loc[: timeframe[1]]
             else:
                 timeframe_returns = returns.copy()
             if len(timeframe_returns.index) == 0:
-                raise Exception(f'No returns for {name} timeframe')
-            calc_cummulative_returns(
+                raise Exception(f"No returns for {name} timeframe")
+            calc_cumulative_returns(
                 timeframe_returns,
                 return_plot=True,
                 fig_size=fig_size,
                 return_series=False,
                 name=name,
-                timeframes=None
+                timeframes=None,
             )
         return
     returns = returns.copy()
@@ -140,14 +139,26 @@ def calc_cummulative_returns(
     returns = returns.apply(lambda x: x + 1)
     returns = returns.cumprod()
     returns = returns.apply(lambda x: x - 1)
-    title = f'Cummulative Returns {name}' if name else 'Cummulative Returns'
+    title = f"Cumulative Returns {name}" if name else "Cumulative Returns"
     if return_plot:
-        returns.plot(
+        # Add a first row with a value of zero only for plotting
+        plot_returns = returns.copy()
+        first_row_index = plot_returns.index[0] - (
+            plot_returns.index[1] - plot_returns.index[0]
+        )
+        first_row = pd.DataFrame(
+            [[0] * plot_returns.shape[1]],
+            columns=plot_returns.columns,
+            index=[first_row_index],
+        )
+        plot_returns = pd.concat([first_row, plot_returns])
+        # Plot
+        plot_returns.plot(
             title=title,
             figsize=fig_size,
             grid=True,
-            xlabel='Date',
-            ylabel='Cummulative Returns'
+            xlabel="Date",
+            ylabel="Cumulative Returns",
         )
     if return_series:
         return returns
@@ -198,14 +209,12 @@ def get_best_and_worst(
         )
 
 
-
-
 def calc_summary_statistics(
     returns: Union[pd.DataFrame, List],
     annual_factor: int = None,
     provided_excess_returns: bool = None,
     rf: Union[pd.Series, pd.DataFrame] = None,
-    var_quantile: Union[float, List] = .05,
+    var_quantile: Union[float, List] = 0.05,
     timeframes: Union[None, dict] = None,
     return_tangency_weights: bool = True,
     correlations: Union[bool, List] = True,
@@ -242,7 +251,7 @@ def calc_summary_statistics(
         rf = rf.copy()
         if provided_excess_returns is True:
             raise Exception(
-                'rf is provided but excess returns were provided as well.'
+                "rf is provided but excess returns were provided as well."
                 'Remove "rf" or set "provided_excess_returns" to None or False'
             )
 
@@ -250,12 +259,14 @@ def calc_summary_statistics(
         returns_list = returns[:]
         returns = pd.DataFrame({})
         for series in returns_list:
-            returns = returns.merge(series, right_index=True, left_index=True, how='outer')
+            returns = returns.merge(
+                series, right_index=True, left_index=True, how="outer"
+            )
 
-    if 'date' in returns.columns.str.lower():
-        returns = returns.rename({'Date': 'date'}, axis=1)
-        returns = returns.set_index('date')
-    returns.index.name = 'date'
+    if "date" in returns.columns.str.lower():
+        returns = returns.rename({"Date": "date"}, axis=1)
+        returns = returns.set_index("date")
+    returns.index.name = "date"
 
     try:
         returns.index = pd.to_datetime(returns.index.map(lambda x: x.date()))
@@ -266,12 +277,12 @@ def calc_summary_statistics(
     returns = returns.apply(lambda x: x.astype(float))
 
     if annual_factor is None:
-        print('Assuming monthly returns with annualization term of 12')
+        print("Assuming monthly returns with annualization term of 12")
         annual_factor = 12
 
     if provided_excess_returns is None:
         print(
-            'Assuming excess returns were provided to calculate Sharpe.'
+            "Assuming excess returns were provided to calculate Sharpe."
             ' If returns were provided (steady of excess returns), the column "Sharpe" is actually "Mean/Volatility"'
         )
         provided_excess_returns = True
@@ -279,22 +290,26 @@ def calc_summary_statistics(
         if rf is not None:
             if len(rf.index) != len(returns.index):
                 raise Exception('"rf" index must be the same lenght as "returns"')
-            print('"rf" is used to subtract returns to calculate Sharpe, but nothing else')
+            print(
+                '"rf" is used to subtract returns to calculate Sharpe, but nothing else'
+            )
 
     if isinstance(timeframes, dict):
         all_timeframes_summary_statistics = pd.DataFrame({})
         for name, timeframe in timeframes.items():
             if timeframe[0] and timeframe[1]:
-                timeframe_returns = returns.loc[timeframe[0]:timeframe[1]]
+                timeframe_returns = returns.loc[timeframe[0] : timeframe[1]]
             elif timeframe[0]:
-                timeframe_returns = returns.loc[timeframe[0]:]
+                timeframe_returns = returns.loc[timeframe[0] :]
             elif timeframe[1]:
-                timeframe_returns = returns.loc[:timeframe[1]]
+                timeframe_returns = returns.loc[: timeframe[1]]
             else:
                 timeframe_returns = returns.copy()
             if len(timeframe_returns.index) == 0:
-                raise Exception(f'No returns for {name} timeframe')
-            timeframe_returns = timeframe_returns.rename(columns=lambda c: c + f' {name}')
+                raise Exception(f"No returns for {name} timeframe")
+            timeframe_returns = timeframe_returns.rename(
+                columns=lambda c: c + f" {name}"
+            )
             timeframe_summary_statistics = calc_summary_statistics(
                 returns=timeframe_returns,
                 annual_factor=annual_factor,
@@ -308,19 +323,19 @@ def calc_summary_statistics(
                 drop_columns=drop_columns,
                 keep_indexes=keep_indexes,
                 drop_indexes=drop_indexes,
-                drop_before_keep=drop_before_keep
+                drop_before_keep=drop_before_keep,
             )
             all_timeframes_summary_statistics = pd.concat(
                 [all_timeframes_summary_statistics, timeframe_summary_statistics],
-                axis=0
+                axis=0,
             )
         return all_timeframes_summary_statistics
 
     summary_statistics = pd.DataFrame(index=returns.columns)
-    summary_statistics['Mean'] = returns.mean()
-    summary_statistics['Annualized Mean'] = returns.mean() * annual_factor
-    summary_statistics['Vol'] = returns.std()
-    summary_statistics['Annualized Vol'] = returns.std() * np.sqrt(annual_factor)
+    summary_statistics["Mean"] = returns.mean()
+    summary_statistics["Annualized Mean"] = returns.mean() * annual_factor
+    summary_statistics["Vol"] = returns.std()
+    summary_statistics["Annualized Vol"] = returns.std() * np.sqrt(annual_factor)
     try:
         if not provided_excess_returns:
             if type(rf) == pd.DataFrame:
@@ -330,30 +345,45 @@ def calc_summary_statistics(
             else:
                 raise Exception('"rf" must be either a pd.DataFrame or pd.Series')
             excess_returns = returns.apply(lambda x: x - rf)
-            summary_statistics['Sharpe'] = excess_returns.mean() / returns.std()
+            summary_statistics["Sharpe"] = excess_returns.mean() / returns.std()
         else:
-            summary_statistics['Sharpe'] = returns.mean() / returns.std()
+            summary_statistics["Sharpe"] = returns.mean() / returns.std()
     except Exception as e:
-        print(f'Could not calculate Sharpe: {e}')
-    summary_statistics['Annualized Sharpe'] = summary_statistics['Sharpe'] * np.sqrt(annual_factor)
-    summary_statistics['Min'] = returns.min()
-    summary_statistics['Max'] = returns.max()
-    summary_statistics['Skewness'] = returns.skew()
-    summary_statistics['Excess Kurtosis'] = returns.kurtosis()
-    var_quantile = [var_quantile] if isinstance(var_quantile, (float, int)) else var_quantile
+        print(f"Could not calculate Sharpe: {e}")
+    summary_statistics["Annualized Sharpe"] = summary_statistics["Sharpe"] * np.sqrt(
+        annual_factor
+    )
+    summary_statistics["Min"] = returns.min()
+    summary_statistics["Max"] = returns.max()
+    summary_statistics["Skewness"] = returns.skew()
+    summary_statistics["Excess Kurtosis"] = returns.kurtosis()
+    var_quantile = (
+        [var_quantile] if isinstance(var_quantile, (float, int)) else var_quantile
+    )
     for var_q in var_quantile:
-        summary_statistics[f'Historical VaR ({var_q:.2%})'] = returns.quantile(var_q, axis = 0)
-        summary_statistics[f'Annualized Historical VaR ({var_q:.2%})'] = returns.quantile(var_q, axis = 0) * np.sqrt(annual_factor)
-        summary_statistics[f'Historical CVaR ({var_q:.2%})'] = returns[returns <= returns.quantile(var_q, axis = 0)].mean()
-        summary_statistics[f'Annualized Historical CVaR ({var_q:.2%})'] = returns[returns <= returns.quantile(var_q, axis = 0)].mean() * np.sqrt(annual_factor)
+        summary_statistics[f"Historical VaR ({var_q:.2%})"] = returns.quantile(
+            var_q, axis=0
+        )
+        summary_statistics[f"Annualized Historical VaR ({var_q:.2%})"] = (
+            returns.quantile(var_q, axis=0) * np.sqrt(annual_factor)
+        )
+        summary_statistics[f"Historical CVaR ({var_q:.2%})"] = returns[
+            returns <= returns.quantile(var_q, axis=0)
+        ].mean()
+        summary_statistics[f"Annualized Historical CVaR ({var_q:.2%})"] = returns[
+            returns <= returns.quantile(var_q, axis=0)
+        ].mean() * np.sqrt(annual_factor)
 
     wealth_index = 1000 * (1 + returns).cumprod()
     previous_peaks = wealth_index.cummax()
     drawdowns = (wealth_index - previous_peaks) / previous_peaks
 
-    summary_statistics['Max Drawdown'] = drawdowns.min()
-    summary_statistics['Peak'] = [previous_peaks[col][:drawdowns[col].idxmin()].idxmax() for col in previous_peaks.columns]
-    summary_statistics['Bottom'] = drawdowns.idxmin()
+    summary_statistics["Max Drawdown"] = drawdowns.min()
+    summary_statistics["Peak"] = [
+        previous_peaks[col][: drawdowns[col].idxmin()].idxmax()
+        for col in previous_peaks.columns
+    ]
+    summary_statistics["Bottom"] = drawdowns.idxmin()
 
     if return_tangency_weights:
         tangency_weights = calc_tangency_weights(returns)
@@ -361,30 +391,42 @@ def calc_summary_statistics(
 
     recovery_date = []
     for col in wealth_index.columns:
-        prev_max = previous_peaks[col][:drawdowns[col].idxmin()].max()
-        recovery_wealth = pd.DataFrame([wealth_index[col][drawdowns[col].idxmin():]]).T
-        recovery_date.append(recovery_wealth[recovery_wealth[col] >= prev_max].index.min())
-    summary_statistics['Recovery'] = recovery_date
+        prev_max = previous_peaks[col][: drawdowns[col].idxmin()].max()
+        recovery_wealth = pd.DataFrame([wealth_index[col][drawdowns[col].idxmin() :]]).T
+        recovery_date.append(
+            recovery_wealth[recovery_wealth[col] >= prev_max].index.min()
+        )
+    summary_statistics["Recovery"] = recovery_date
     try:
         summary_statistics["Duration (days)"] = [
-            (i - j).days if i != "-" else "-" for i, j in
-            zip(summary_statistics["Recovery"], summary_statistics["Bottom"])
+            (i - j).days if i != "-" else "-"
+            for i, j in zip(
+                summary_statistics["Recovery"], summary_statistics["Bottom"]
+            )
         ]
     except (AttributeError, TypeError) as e:
-        print(f'Cannot calculate "Drawdown Duration" calculation because there was no recovery or because index are not dates: {str(e)}')
+        print(
+            f'Cannot calculate "Drawdown Duration" calculation because there was no recovery or because index are not dates: {str(e)}'
+        )
 
     if correlations is True or isinstance(correlations, list):
         returns_corr = returns.corr()
         if _timeframe_name:
-            returns_corr = returns_corr.rename(columns=lambda c: c.replace(f' {_timeframe_name}', ''))
-        returns_corr = returns_corr.rename(columns=lambda c: c + ' Correlation')
+            returns_corr = returns_corr.rename(
+                columns=lambda c: c.replace(f" {_timeframe_name}", "")
+            )
+        returns_corr = returns_corr.rename(columns=lambda c: c + " Correlation")
         if isinstance(correlations, list):
-            correlation_names = [c + ' Correlation' for c  in correlations]
-            not_in_returns_corr = [c for c in correlation_names if c not in returns_corr.columns]
+            correlation_names = [c + " Correlation" for c in correlations]
+            not_in_returns_corr = [
+                c for c in correlation_names if c not in returns_corr.columns
+            ]
             if len(not_in_returns_corr) > 0:
-                not_in_returns_corr = ", ".join([c.replace(' Correlation', '') for c in not_in_returns_corr])
-                raise Exception(f'{not_in_returns_corr} not in returns columns')
-            returns_corr = returns_corr[[c + ' Correlation' for c  in correlations]]
+                not_in_returns_corr = ", ".join(
+                    [c.replace(" Correlation", "") for c in not_in_returns_corr]
+                )
+                raise Exception(f"{not_in_returns_corr} not in returns columns")
+            returns_corr = returns_corr[[c + " Correlation" for c in correlations]]
         summary_statistics = summary_statistics.join(returns_corr)
 
     return _filter_columns_and_indexes(
@@ -393,7 +435,7 @@ def calc_summary_statistics(
         drop_columns=drop_columns,
         keep_indexes=keep_indexes,
         drop_indexes=drop_indexes,
-        drop_before_keep=drop_before_keep
+        drop_before_keep=drop_before_keep,
     )
 
 

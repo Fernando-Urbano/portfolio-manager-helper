@@ -169,7 +169,7 @@ def calc_summary_statistics(
                 'rf is provided but excess returns were provided as well.'
                 'Remove "rf" or set "provided_excess_returns" to None or False'
             )
-        
+
     if isinstance(returns, list):
         returns_list = returns[:]
         returns = pd.DataFrame({})
@@ -273,7 +273,7 @@ def calc_summary_statistics(
         summary_statistics[f'Annualized Historical VaR ({var_q:.2%})'] = returns.quantile(var_q, axis = 0) * np.sqrt(annual_factor)
         summary_statistics[f'Historical CVaR ({var_q:.2%})'] = returns[returns <= returns.quantile(var_q, axis = 0)].mean()
         summary_statistics[f'Annualized Historical CVaR ({var_q:.2%})'] = returns[returns <= returns.quantile(var_q, axis = 0)].mean() * np.sqrt(annual_factor)
-    
+
     wealth_index = 1000 * (1 + returns).cumprod()
     previous_peaks = wealth_index.cummax()
     drawdowns = (wealth_index - previous_peaks) / previous_peaks
@@ -285,7 +285,7 @@ def calc_summary_statistics(
     if return_tangency_weights:
         tangency_weights = calc_tangency_weights(returns)
         summary_statistics = summary_statistics.join(tangency_weights)
-    
+
     recovery_date = []
     for col in wealth_index.columns:
         prev_max = previous_peaks[col][:drawdowns[col].idxmin()].max()
@@ -313,7 +313,7 @@ def calc_summary_statistics(
                 raise Exception(f'{not_in_returns_corr} not in returns columns')
             returns_corr = returns_corr[[c + ' Correlation' for c  in correlations]]
         summary_statistics = summary_statistics.join(returns_corr)
-    
+
     return _filter_columns_and_indexes(
         summary_statistics,
         keep_columns=keep_columns,
@@ -358,7 +358,7 @@ def calc_negative_pct(
     if 'date' in returns.columns.str.lower():
         returns = returns.rename({'Date': 'date'}, axis=1)
         returns = returns.set_index('date')
-        
+
     returns.index.name = 'date'
 
     if isinstance(returns, pd.Series):
@@ -538,7 +538,7 @@ def calc_cross_section_regression(
                 raise Exception('"rf" index must be the same lenght as "returns"')
             print('"rf" is used to subtract returns')
             returns = returns.sub(rf, axis=0)
-    
+
     time_series_regressions = calc_iterative_regression(returns, factors, annual_factor=annual_factor, warnings=False)
     time_series_betas = time_series_regressions.filter(regex='Beta$', axis=1)
     time_series_historical_returns = time_series_regressions[['Fitted Mean']]
@@ -596,7 +596,7 @@ def calc_cross_section_regression(
             drop_indexes=drop_indexes,
             drop_before_keep=drop_before_keep
         )
-    
+
     if return_mae:
         cross_section_regression['TS MAE'] = time_series_regressions['Alpha'].abs().mean()
         cross_section_regression['TS Annualized MAE'] = time_series_regressions['Annualized Alpha'].abs().mean()
@@ -653,7 +653,7 @@ def get_best_and_worst(
             summary_statistics.loc[lambda df: df.index == asset_best_stat],
             summary_statistics.loc[lambda df: df.index == asset_worst_stat]
         ])
-    
+
 
 def calc_correlations(
     returns: pd.DataFrame,
@@ -694,7 +694,7 @@ def calc_correlations(
     if return_heatmap:
         fig, ax = plt.subplots(figsize=(matrix_size * 1.5, matrix_size))
         heatmap = sns.heatmap(
-            correlation_matrix, 
+            correlation_matrix,
             xticklabels=correlation_matrix.columns,
             yticklabels=correlation_matrix.columns,
             annot=True,
@@ -713,7 +713,7 @@ def calc_correlations(
         lowest_corr = highest_lowest_corr.iloc[0, :]
         print(f'The highest correlation ({highest_corr["corr"]:.2%}) is between {highest_corr.asset_1} and {highest_corr.asset_2}')
         print(f'The lowest correlation ({lowest_corr["corr"]:.2%}) is between {lowest_corr.asset_1} and {lowest_corr.asset_2}')
-    
+
     if return_heatmap:
         return heatmap
     else:
@@ -725,7 +725,7 @@ def calc_correlations(
             drop_indexes=drop_indexes,
             drop_before_keep=drop_before_keep
         )
-    
+
 
 def calc_tangency_weights(
     returns: pd.DataFrame,
@@ -754,7 +754,7 @@ def calc_tangency_weights(
     pd.DataFrame or pd.Series: Tangency portfolio weights or portfolio returns if `return_port_ret` is True.
     """
     returns = returns.copy()
-    
+
     if 'date' in returns.columns.str.lower():
         returns = returns.rename({'Date': 'date'}, axis=1)
         returns = returns.set_index('date')
@@ -766,9 +766,9 @@ def calc_tangency_weights(
         cov = returns.cov()
         covmat_diag = np.diag(np.diag((cov)))
         covmat = cov_mat * cov + (1 - cov_mat) * covmat_diag
-        cov_inv = np.linalg.pinv((covmat * annual_factor))  
-        
-    ones = np.ones(returns.columns.shape) 
+        cov_inv = np.linalg.pinv((covmat * annual_factor))
+
+    ones = np.ones(returns.columns.shape)
     if expected_returns is not None:
         mu = expected_returns
         if not expected_returns_already_annualized:
@@ -803,7 +803,7 @@ def calc_tangency_weights(
     if cov_mat != 1:
         port_returns = port_returns.rename(columns=lambda c: c.replace('Tangency', f'Tangency Regularized {cov_mat:.2f}'))
         tangency_wts = tangency_wts.rename(columns=lambda c: c.replace('Tangency', f'Tangency Regularized {cov_mat:.2f}'))
-        
+
     if return_port_ret:
         return port_returns
     return tangency_wts
@@ -858,7 +858,7 @@ def calc_equal_weights(
             {f'{name} Portfolio': f'{name} Portfolio Rescaled Target {target_ret_rescale_weights:.2%}'},
             axis=1
         )
-        
+
     if return_port_ret:
         return port_returns
     return equal_wts
@@ -913,7 +913,7 @@ def calc_risk_parity_weights(
             {f'{name} Portfolio': f'{name} Portfolio Rescaled Target {target_ret_rescale_weights:.2%}'},
             axis=1
         )
-        
+
     if return_port_ret:
         return port_returns
     return risk_parity_wts
@@ -999,18 +999,18 @@ def calc_target_ret_weights(
     pd.DataFrame: Weights of the Tangency and GMV portfolios, along with the combined target return portfolio.
     """
     returns = returns.copy()
-    
+
     if 'date' in returns.columns.str.lower():
         returns = returns.rename({'Date': 'date'}, axis=1)
         returns = returns.set_index('date')
     returns.index.name = 'date'
-    
+
     mu_tan = returns.mean() @ calc_tangency_weights(returns, cov_mat = 1)
     mu_gmv = returns.mean() @ calc_gmv_weights(returns)
-    
+
     delta = (target_ret - mu_gmv[0]) / (mu_tan[0] - mu_gmv[0])
     mv_weights = (delta * calc_tangency_weights(returns, cov_mat=1)).values + ((1 - delta) * calc_gmv_weights(returns)).values
-    
+
     mv_weights = pd.DataFrame(
         index=returns.columns,
         data=mv_weights,
@@ -1084,17 +1084,17 @@ def calc_regression(
     if annual_factor is None:
         print("Regression assumes 'annual_factor' equals to 12 since it was not provided")
         annual_factor = 12
-    
+
     if 'date' in X.columns.str.lower():
         X = X.rename({'Date': 'date'}, axis=1)
         X = X.set_index('date')
     X.index.name = 'date'
-    
+
     if warnings:
         print('"calc_regression" assumes excess returns to calculate Information and Treynor Ratios')
     if intercept:
         X = sm.add_constant(X)
-    
+
     y_name = y.name if isinstance(y, pd.Series) else y.columns[0]
 
     if len(X.index) != len(y.index):
@@ -1263,7 +1263,7 @@ def calc_strategy_oos(
     else:
         strategy_returns.columns = [f'{y.columns[0]} Strategy']
     return strategy_returns
-    
+
 
 def calc_iterative_regression(
     multiple_y: Union[pd.DataFrame, pd.Series],
@@ -1322,7 +1322,7 @@ def calc_iterative_regression(
         )
         warnings = False
         regressions = pd.concat([regressions, new_regression], axis=0)
-    
+
     return _filter_columns_and_indexes(
         regressions,
         keep_columns=keep_columns,
@@ -1433,7 +1433,7 @@ def calc_replication_oos(
         return pd.DataFrame(
             {'R^Squared OOS': oos_rsquared},
             index=[
-                y.columns[0] + " ~ " + 
+                y.columns[0] + " ~ " +
                 " + ".join([
                     c.replace('const', 'Alpha') if c == 'const' else c + ' Lag Beta' for c in X.columns
                 ])]
@@ -1507,7 +1507,7 @@ def calc_replication_oos_not_lagged_features(
     if isinstance(y, pd.Series):
         y = pd.DataFrame(y)
     y_name = y.columns[0]
-    
+
     for idx in range(rolling_size, len(y.index)+1-oos, 1):
         X_rolling = X.iloc[idx-rolling_size:idx].copy()
         y_rolling = y.iloc[idx-rolling_size:idx, 0].copy()
@@ -1560,7 +1560,7 @@ def calc_replication_oos_not_lagged_features(
 
     if return_r_squared_oos:
         return oos_rsquared
-    
+
     if not return_parameters:
         summary = summary[[f"{y_name} Actual", f"{y_name} Replicated"]]
 
@@ -1954,7 +1954,7 @@ def calc_fx_exc_ret(
             keep_indexes=keep_indexes, drop_indexes=drop_indexes,
             drop_before_keep=drop_before_keep
         )
-    
+
 
 def calc_fx_regression(
     fx_rates: pd.DataFrame,
@@ -2126,7 +2126,7 @@ def calc_dynamic_carry_trade(
     if annual_factor is None:
         print("Regression assumes 'annual_factor' equals to 12 since it was not provided")
         annual_factor = 12
-        
+
     fx_regressions = calc_fx_regression(
         fx_rates, rf_rates, transform_to_log_fx_rates, transform_to_log_rf_rates,
         rf_to_fx, base_rf, base_rf_series, annual_factor
@@ -2175,7 +2175,7 @@ def calc_dynamic_carry_trade(
             keep_indexes=keep_indexes, drop_indexes=drop_indexes,
             drop_before_keep=drop_before_keep
         )
-    
+
     all_expected_fx_premium = all_expected_fx_premium.dropna(axis=0)
     summary_statistics = (
         all_expected_fx_premium
@@ -2194,7 +2194,7 @@ def calc_dynamic_carry_trade(
     summary_statistics = summary_statistics.transpose()
     summary_statistics['Annualized Mean'] = summary_statistics['Mean'] * annual_factor
     summary_statistics['Annualized Vol'] = summary_statistics['Vol'] * math.sqrt(annual_factor)
-    
+
     return _filter_columns_and_indexes(
         summary_statistics,
         keep_columns=keep_columns, drop_columns=drop_columns,

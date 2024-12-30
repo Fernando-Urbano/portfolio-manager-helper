@@ -103,7 +103,7 @@ def calc_cross_section_regression(
             if len(rf.index) != len(returns.index):
                 raise Exception('"rf" index must be the same lenght as "returns"')
             print('"rf" is used to subtract returns')
-            returns = returns.sub(rf, axis=0)
+            returns = returns.sub(rf.values, axis=0)
 
     time_series_regressions = calc_iterative_regression(
         returns, factors, annual_factor=annual_factor, warnings=False
